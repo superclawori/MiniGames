@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Space Invaders</title>
+<style>
+  body { background:#000; color:#0f0; text-align:center; font-family:monospace; }
+  #game { margin:20px auto; width:200px; height:200px; border:2px solid #0f0; position:relative; }
+  .cell { width:10px; height:10px; position:absolute; }
+  .player { background:#0f0; }
+  .invader { background:#f00; }
+  .bullet { background:#ff0; }
+</style>
+</head>
+<body>
+<h2>Space Invaders</h2>
+<p>Arrow keys: ← →, Shoot: ↑</p>
+<div id="game"></div>
+
+<script>
+const cols=20, rows=20, cellSize=10;
+let gameDiv=document.getElementById('game');
+
+let player={x:9, y:19};
+let bullet=null;
+let invaders=[];
+for(let i=0;i<5;i++) for(let j=0;j<4;j++) invaders.push({x:2+i*3,y:1+j*2});
+
+function draw(){
+  gameDiv.innerHTML='';
+  // Draw player
+  let pdiv=document.createElement('div'); pdiv.className='cell player';
+  pdiv.style.left=player.x*cellSize+'px'; pdiv.style.top=player.y*cellSize+'px';
+  gameDiv.appendChild(pdiv);
+  // Draw bullet
+  if(bullet){let bdiv=document.createElement('div'); bdiv.className='cell bullet';
+  bdiv.style.left=bullet.x*cellSize+'px'; bdiv.style.top=bullet.y*cellSize+'px'; gameDiv.appendChild(bdiv);}
+  // Draw invaders
+  invaders.forEach(inv=>{
+    let idiv=document.createElement('div'); idiv.className='cell invader';
+    idiv.style.left=inv.x*cellSize+'px'; idiv.style.top=inv.y*cellSize+'px';
+    gameDiv.appendChild(idiv);
+  });
+}
+
+function update(){
+  // Move bullet
+  if(bullet){
+    bullet.y--;
+    invaders = invaders.filter(inv=>!(inv.x===bullet.x && inv.y===bullet.y));
+    if(bullet.y<0) bullet=null;
+  }
+  draw();
+  if(invaders.length===0){ clearInterval(interval); alert('You Win!'); }
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowLeft' && player.x>0) player.x--;
+  if(e.key==='ArrowRight' && player.x<cols-1) player.x++;
+  if(e.key==='ArrowUp' && !bullet) bullet={x:player.x,y:player.y-1};
+  draw();
+});
+
+draw();
+let interval=setInterval(update,200);
+</script>
+</body>
+</html>

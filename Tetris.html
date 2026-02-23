@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Tetris</title>
+<style>
+  body { background:#000; color:#0f0; text-align:center; font-family:monospace; }
+  #game { margin:20px auto; width:200px; height:400px; border:2px solid #0f0; position:relative; }
+  .cell { width:20px; height:20px; position:absolute; }
+  .block { background:#0f0; }
+</style>
+</head>
+<body>
+<h2>Tetris</h2>
+<p>Arrow keys: ← → ↓, Rotate: ↑</p>
+<div id="game"></div>
+
+<script>
+const cols=10, rows=20, size=20;
+let grid = Array(rows).fill().map(()=>Array(cols).fill(0));
+const shapes=[
+  [[1,1,1,1]], // I
+  [[1,1],[1,1]], // O
+  [[0,1,0],[1,1,1]], // T
+  [[1,1,0],[0,1,1]], // S
+  [[0,1,1],[1,1,0]]  // Z
+];
+let current = {x:4, y:0, shape: shapes[Math.floor(Math.random()*shapes.length)]};
+let gameDiv = document.getElementById('game');
+let interval;
+
+function draw() {
+  gameDiv.innerHTML='';
+  for(let y=0;y<rows;y++){
+    for(let x=0;x<cols;x++){
+      if(grid[y][x]){
+        let div=document.createElement('div');
+        div.className='cell block';
+        div.style.left=x*size+'px';
+        div.style.top=y*size+'px';
+        gameDiv.appendChild(div);
+      }
+    }
+  }
+  current.shape.forEach((row,dy)=>{
+    row.forEach((v,dx)=>{
+      if(v){
+        let div=document.createElement('div');
+        div.className='cell block';
+        div.style.left=(current.x+dx)*size+'px';
+        div.style.top=(current.y+dy)*size+'px';
+        gameDiv.appendChild(div);
+      }
+    });
+  });
+}
+
+function collide(nx, ny, shape) {
+  return shape.some((row,dy)=>row.some((v,dx)=>v&&(grid[ny+dy]===undefined||grid[ny+dy][nx+dx]!==0)));
+}
+
+function merge() {
+  current.shape.forEach((row,dy)=>row.forEach((v,dx)=>{if(v) grid[current.y+dy][current.x+dx]=1;}));
+  // Clear lines
+  for(let y=rows-1;y>=0;y--){
+    if(grid[y].every(v=>v)){
+      grid.splice(y,1); grid.unshift(Array(cols).fill(0)); y++;
+    }
+  }
+}
+
+function drop() {
+  if(!collide(current.x,current.y+1,current.shape)){ current.y++; }
+  else { merge(); current={x:4,y:0,shape:shapes[Math.floor(Math.random()*shapes.length)]};
+         if(collide(current.x,current.y,current.shape)) { clearInterval(interval); alert('Game Over'); } }
+  draw();
+}
+
+function rotate() {
+  let newShape = current.shape[0].map((_,i)=>current.shape.map(row=>row[i])).reverse();
+  if(!collide(current.x,current.y,newShape)) current.shape=newShape;
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowLeft' && !collide(current.x-1,current.y,current.shape)) current.x--;
+  if(e.key==='ArrowRight' && !collide(current.x+1,current.y,current.shape)) current.x++;
+  if(e.key==='ArrowDown') drop();
+  if(e.key==='ArrowUp') rotate();
+  draw();
+});
+
+draw();
+interval=setInterval(drop,500);
+</script>
+</body>
+</html>
